@@ -60,18 +60,26 @@
                                 <td>{{ $product->name }}</td>
                                 <td>{{ $product->price }}</td>
                                 <td class="text-center">
-                                    <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning btn-sm me-1">
-                                        <i class="fa fa-edit"></i> تعديل
-                                    </a>
+                            <!-- زر عرض المنتج -->
+        <a href="{{ route('products.show', $product->id) }}" class="btn btn-info btn-sm me-1">
+        <i class="fa fa-eye"></i> عرض
+        </a>
 
-                                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('تأكيد الحذف؟')">
-                                            <i class="fa fa-trash"></i> حذف
-                                        </button>
-                                    </form>
-                                </td>
+                            <!-- زر تعديل -->
+          <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning btn-sm me-1">
+        <i class="fa fa-edit"></i> تعديل
+         </a>
+
+                           <!-- زر حذف -->
+        <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="d-inline">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('تأكيد الحذف؟')">
+            <i class="fa fa-trash"></i> حذف
+        </button>
+    </form>
+    </td>
+
                             </tr>
                             @endforeach
                         </tbody>

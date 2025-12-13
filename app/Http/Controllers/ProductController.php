@@ -13,6 +13,12 @@ class ProductController extends Controller
         $products = Product::all();
         return view('products.index', compact('products'));
     }
+    // Show - عرض منتج واحد
+    public function show(Product $product)
+    {
+    return view('products.show', compact('product'));
+     }
+
 
     // Create - إظهار فورم الإضافة
     public function create()
