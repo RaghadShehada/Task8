@@ -7,5 +7,27 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $fillable = ['name', 'price'];
+    use HasFactory;
+
+    protected $fillable = ['name', 'price', 'category_id', 'user_id'];
+
+   
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    
+    public function suppliers()
+    {
+        return $this->belongsToMany(Supplier::class)
+                    ->withPivot(['cost_price', 'lead_time_days'])
+                    ->withTimestamps();
+    }
+
+    
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

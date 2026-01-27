@@ -3,99 +3,88 @@
 <head>
     <meta charset="utf-8">
     <title>قائمة المنتجات</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- Bootstrap CSS عبر CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome للأيقونات (اختياري) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-
-    <style>
-        body { font-family: "Tahoma", "Segoe UI", sans-serif; }
-    </style>
 </head>
 <body class="bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url('/') }}">منتجاتي</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="{{ route('products.index') }}">المنتجات</a></li>
-                </ul>
-                <a href="{{ route('products.create') }}" class="btn btn-success btn-sm">
-                    <i class="fa fa-plus"></i> إضافة منتج
-                </a>
-            </div>
-        </div>
-    </nav>
+<div class="container py-4">
+    <h2 class="mb-4">قائمة المنتجات</h2>
 
-    <main class="container py-4">
-        <div class="card shadow-sm">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">قائمة المنتجات</h5>
-                <a href="{{ route('products.create') }}" class="btn btn-success btn-sm">
-                    <i class="fa fa-plus"></i> إضافة منتج
-                </a>
-            </div>
-            <div class="card-body">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
-                @if(session('success'))
-                    <div class="alert alert-success">{{ session('success') }}</div>
-                @endif
-
-                <div class="table-responsive">
-                    <table class="table table-striped table-bordered align-middle">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>الاسم</th>
-                                <th>السعر</th>
-                                <th class="text-center">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($products as $product)
-                            <tr>
-                                <td>{{ $product->name }}</td>
-                                <td>{{ $product->price }}</td>
-                                <td class="text-center">
-                            <!-- زر عرض المنتج -->
-        <a href="{{ route('products.show', $product->id) }}" class="btn btn-info btn-sm me-1">
-        <i class="fa fa-eye"></i> عرض
+    @auth
+        <a href="{{ route('products.create') }}" class="btn btn-success mb-3">
+            <i class="fa fa-plus"></i> إضافة منتج
         </a>
+    @endauth
 
-                            <!-- زر تعديل -->
-          <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning btn-sm me-1">
-        <i class="fa fa-edit"></i> تعديل
-         </a>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>الاسم</th>
+                    <th>السعر</th>
+                    <th>التصنيف</th>
+                    <th>الموردون</th>
+                    <th>المالك</th>
+                    <th class="text-center">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($products as $product)
+                    <tr>
+                        <td>{{ $product->id }}</td>
+                        <td>{{ $product->name }}</td>
+                        <td>{{ $product->price }}</td>
+                        <td>{{ $product->category ? $product->category->name : 'بدون تصنيف' }}</td>
+                        <td>
+                            @forelse($product->suppliers as $s)
+                                <div>
+                                    {{ $s->name }}
+                                    <small class="text-muted">
+                                        (cost: {{ $s->pivot->cost_price }}, lead: {{ $s->pivot->lead_time_days }} يوم)
+                                    </small>
+                                </div>
+                            @empty
+                                <span class="text-muted">لا يوجد موردون</span>
+                            @endforelse
+                        </td>
+                        <td>{{ $product->user->name ?? 'غير معروف' }}</td>
+                        <td class="text-center">
+                            <a href="{{ route('products.show', $product->id) }}" class="btn btn-info btn-sm me-1">
+                                <i class="fa fa-eye"></i> عرض
+                            </a>
+                            @can('update', $product)
+                                <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning btn-sm me-1">
+                                    <i class="fa fa-edit"></i> تعديل
+                                </a>
+                            @endcan
+                            @can('delete', $product)
+                                <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('تأكيد الحذف؟')">
+                                        <i class="fa fa-trash"></i> حذف
+                                    </button>
+                                </form>
+                            @endcan
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center text-danger">لا توجد منتجات حالياً</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 
-                           <!-- زر حذف -->
-        <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="d-inline">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('تأكيد الحذف؟')">
-            <i class="fa fa-trash"></i> حذف
-        </button>
-    </form>
-    </td>
-
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                @if(method_exists($products, 'links'))
-                    <div class="mt-3">
-                        {{ $products->links() }}
-                    </div>
-                @endif
-            </div>
-        </div>
-    </main>
-
-    <!-- Bootstrap JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="mt-3">
+        {{ $products->links() }}
+    </div>
+</div>
 </body>
 </html>

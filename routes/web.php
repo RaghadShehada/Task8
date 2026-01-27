@@ -2,15 +2,31 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 
-// Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-// Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
-// Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-// Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
-// Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
-// Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
-Route::resource('products', ProductController::class);
 Route::get('/', function () {
-    return redirect()->route('products.index');
+    return view('welcome');
 });
 
+// Dashboard
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth'])->name('dashboard');
+
+// Profile
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Products
+Route::middleware('auth')->group(function () {
+    Route::resource('products', ProductController::class)
+        ->except(['index', 'show']);
+});
+
+Route::resource('products', ProductController::class)
+    ->only(['index', 'show']);
+
+require __DIR__.'/auth.php';

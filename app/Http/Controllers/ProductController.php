@@ -3,65 +3,136 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use Illuminate\Http\Request;
+use App\Models\Category;
+use App\Models\Supplier;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 
 class ProductController extends Controller
 {
-    // Read - عرض قائمة المنتجات
+    /**
+     * عرض قائمة المنتجات مع التصنيف والموردين
+     */
     public function index()
     {
-        $products = Product::all();
+        $products = Product::with(['category', 'suppliers', 'user']) // تحميل المالك أيضًا
+                           ->withCount('suppliers')
+                           ->latest()
+                           ->paginate(10);
+
         return view('products.index', compact('products'));
     }
-    // Show - عرض منتج واحد
-    public function show(Product $product)
-    {
-    return view('products.show', compact('product'));
-     }
 
-
-    // Create - إظهار فورم الإضافة
+    /**
+     * عرض صفحة إنشاء منتج جديد
+     */
     public function create()
     {
-        return view('products.create');
+        $categories = Category::all();
+        $suppliers  = Supplier::all();
+        return view('products.create', compact('categories', 'suppliers'));
     }
 
-    // Store - حفظ المنتج الجديد
-    public function store(Request $request)
+    /**
+     * تخزين منتج جديد مع الموردين (pivot) وربطه بالمستخدم الحالي
+     */
+    public function store(StoreProductRequest $request)
     {
-        $request->validate([
-            'name'  => 'required|string|max:255',
-            'price' => 'required|numeric'
+        $data = $request->validated();
+
+        // إنشاء المنتج وربطه بالمستخدم الحالي
+        $product = Product::create([
+            'name'        => $data['name'],
+            'price'       => $data['price'],
+            'category_id' => $data['category_id'],
+            'user_id'     => auth()->id(), // ربط المنتج بالمستخدم الحالي
         ]);
 
-        Product::create($request->only(['name','price']));
+        // تجهيز بيانات الـ pivot
+        $pivot = [];
+        foreach ($request->input('suppliers', []) as $supplierId => $payload) {
+            if (!empty($payload['selected'])) {
+                $pivot[$supplierId] = [
+                    'cost_price'     => $payload['cost_price'],
+                    'lead_time_days' => $payload['lead_time_days'],
+                ];
+            }
+        }
 
-        return redirect()->route('products.index')->with('success', 'Product Added');
+        // ربط الموردين بالمنتج
+        $product->suppliers()->sync($pivot);
+
+        return redirect()->route('products.index')
+                         ->with('success', 'تم إنشاء المنتج وربطه بالمستخدم والموردين بنجاح.');
     }
 
-    // Edit - إظهار فورم التعديل
+    /**
+     * عرض تفاصيل منتج واحد
+     */
+    public function show(Product $product)
+    {
+        $product->load(['category', 'suppliers', 'user']);
+        return view('products.show', compact('product'));
+    }
+
+    /**
+     * عرض صفحة تعديل منتج
+     */
     public function edit(Product $product)
     {
-        return view('products.edit', compact('product'));
+        $this->authorize('update', $product); // التحقق من الصلاحيات
+
+        $categories = Category::all();
+        $suppliers  = Supplier::all();
+        $product->load('suppliers');
+
+        return view('products.edit', compact('product', 'categories', 'suppliers'));
     }
 
-    // Update - حفظ التغييرات
-    public function update(Request $request, Product $product)
+    /**
+     * تحديث بيانات منتج مع الموردين (pivot)
+     */
+    public function update(UpdateProductRequest $request, Product $product)
     {
-        $request->validate([
-            'name'  => 'required|string|max:255',
-            'price' => 'required|numeric'
+        $this->authorize('update', $product); // التحقق من الصلاحيات
+
+        $data = $request->validated();
+
+        // تحديث المنتج
+        $product->update([
+            'name'        => $data['name'],
+            'price'       => $data['price'],
+            'category_id' => $data['category_id'],
         ]);
 
-        $product->update($request->only(['name','price']));
+        // تجهيز بيانات الـ pivot
+        $pivot = [];
+        foreach ($request->input('suppliers', []) as $supplierId => $payload) {
+            if (!empty($payload['selected'])) {
+                $pivot[$supplierId] = [
+                    'cost_price'     => $payload['cost_price'],
+                    'lead_time_days' => $payload['lead_time_days'],
+                ];
+            }
+        }
 
-        return redirect()->route('products.index')->with('success', 'Product Updated');
+        // تحديث الموردين المرتبطين بالمنتج
+        $product->suppliers()->sync($pivot);
+
+        return redirect()->route('products.index')
+                         ->with('success', 'تم تحديث المنتج والموردين بنجاح.');
     }
 
-    // Delete - حذف المنتج
+    /**
+     * حذف منتج
+     */
     public function destroy(Product $product)
     {
+        $this->authorize('delete', $product); // التحقق من الصلاحيات
+
         $product->delete();
-        return redirect()->route('products.index')->with('success', 'Product Deleted');
+
+        return redirect()->route('products.index')
+                         ->with('success', 'تم حذف المنتج بنجاح.');
     }
 }
