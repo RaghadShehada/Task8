@@ -1,0 +1,66 @@
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Add New Supplier
+        </h2>
+    </x-slot>
+
+    <div class="py-12">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+
+            {{-- Success Message --}}
+            @if (session('success'))
+                <div class="mb-4 text-green-600 font-semibold">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            {{-- Validation Errors --}}
+            @if ($errors->any())
+                <div class="mb-4 text-red-600">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>• {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div class="bg-white p-6 rounded shadow">
+
+                <form action="{{ route('suppliers.store') }}" method="POST">
+                    @csrf
+
+                    {{-- Name --}}
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">Name</label>
+                        <input type="text" name="name" value="{{ old('name') }}"
+                               class="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
+                               placeholder="Enter supplier name" required>
+                    </div>
+
+                    {{-- Email --}}
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">Email</label>
+                        <input type="email" name="email" value="{{ old('email') }}"
+                               class="w-full border rounded px-3 py-2 focus:outline-none focus:ring"
+                               placeholder="Enter supplier email" required>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            Save
+                        </button>
+
+                        <a href="{{ route('suppliers.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                            Back
+                        </a>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</x-app-layout>

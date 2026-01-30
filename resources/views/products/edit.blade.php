@@ -1,104 +1,74 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="utf-8">
-    <title>تعديل المنتج</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            تعديل المنتج
+        </h2>
+    </x-slot>
 
-<div class="container py-4">
-    <h2 class="mb-4">تعديل المنتج</h2>
+    <div class="py-6">
+        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form action="{{ route('products.update', $product->id) }}" method="POST">
-        @csrf
-        @method('PUT')
-
-        <div class="mb-3">
-            <label class="form-label">الاسم</label>
-            <input type="text" name="name" class="form-control" value="{{ old('name', $product->name) }}">
-            @error('name') <div class="text-danger">{{ $message }}</div> @enderror
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">السعر</label>
-            <input type="text" name="price" class="form-control" value="{{ old('price', $product->price) }}">
-            @error('price') <div class="text-danger">{{ $message }}</div> @enderror
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">التصنيف</label>
-            <select name="category_id" class="form-select">
-                <option value="">-- اختر التصنيف --</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                        {{ $category->name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('category_id') <div class="text-danger">{{ $message }}</div> @enderror
-        </div>
-
-        <hr>
-        <h5>الموردون</h5>
-        @error('suppliers') <div class="text-danger mb-2">{{ $message }}</div> @enderror
-
-        @php
-            $pivotMap = $product->suppliers->keyBy('id')->map(fn($s) => [
-                'cost_price' => $s->pivot->cost_price,
-                'lead_time_days' => $s->pivot->lead_time_days,
-            ]);
-        @endphp
-
-        <div class="row g-3">
-            @foreach($suppliers as $supplier)
-                @php
-                    $selected = old("suppliers.$supplier->id.selected") ??
-                                ($pivotMap->has($supplier->id) ? 1 : null);
-                    $cost = old("suppliers.$supplier->id.cost_price") ??
-                            ($pivotMap[$supplier->id]['cost_price'] ?? '');
-                    $lead = old("suppliers.$supplier->id.lead_time_days") ??
-                            ($pivotMap[$supplier->id]['lead_time_days'] ?? '');
-                @endphp
-                <div class="col-md-6">
-                    <div class="border rounded p-3">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox"
-                                   name="suppliers[{{ $supplier->id }}][selected]" value="1"
-                                   {{ $selected ? 'checked' : '' }}>
-                            <label class="form-check-label">
-                                {{ $supplier->name }} — {{ $supplier->email }}
-                            </label>
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label">Cost price</label>
-                            <input type="text" class="form-control"
-                                   name="suppliers[{{ $supplier->id }}][cost_price]"
-                                   value="{{ $cost }}">
-                        </div>
-                        <div>
-                            <label class="form-label">Lead time (days)</label>
-                            <input type="number" class="form-control"
-                                   name="suppliers[{{ $supplier->id }}][lead_time_days]"
-                                   value="{{ $lead }}">
-                        </div>
-                    </div>
+            {{-- Flash Messages --}}
+            @if(session('success'))
+                <div class="mb-4 p-4 bg-green-100 text-green-800 rounded">
+                    {{ session('success') }}
                 </div>
-            @endforeach
-        </div>
+            @endif
+            @if(session('error'))
+                <div class="mb-4 p-4 bg-red-100 text-red-800 rounded">
+                    {{ session('error') }}
+                </div>
+            @endif
 
-        <button type="submit" class="btn btn-primary mt-3">تحديث</button>
-    </form>
-</div>
-</body>
-</html>
+            <div class="bg-white shadow rounded-lg p-6">
+                <form action="{{ route('products.update', $product->id) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="mb-4">
+                        <label class="block mb-1 font-medium">اسم المنتج</label>
+                        <input type="text" name="name" class="w-full border-gray-300 rounded px-3 py-2" value="{{ old('name', $product->name) }}">
+                        @error('name')<small class="text-red-500">{{ $message }}</small>@enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block mb-1 font-medium">السعر</label>
+                        <input type="number" name="price" step="0.01" class="w-full border-gray-300 rounded px-3 py-2" value="{{ old('price', $product->price) }}">
+                        @error('price')<small class="text-red-500">{{ $message }}</small>@enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block mb-1 font-medium">التصنيف</label>
+                        <select name="category_id" class="w-full border-gray-300 rounded px-3 py-2">
+                            <option value="">-- اختر التصنيف --</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ old('category_id', $product->category_id)==$category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('category_id')<small class="text-red-500">{{ $message }}</small>@enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block mb-1 font-medium">الموردون</label>
+                        <select name="suppliers[]" multiple class="w-full border-gray-300 rounded px-3 py-2">
+                            @foreach($suppliers as $supplier)
+                                <option value="{{ $supplier->id }}" {{ in_array($supplier->id, old('suppliers', $product->suppliers->pluck('id')->toArray())) ? 'selected' : '' }}>
+                                    {{ $supplier->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('suppliers')<small class="text-red-500">{{ $message }}</small>@enderror
+                    </div>
+
+                    <div class="flex space-x-2">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">تحديث</button>
+                        <a href="{{ route('products.index') }}" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">إلغاء</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</x-app-layout>

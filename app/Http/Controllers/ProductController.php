@@ -13,15 +13,17 @@ class ProductController extends Controller
     /**
      * عرض قائمة المنتجات مع التصنيف والموردين
      */
-    public function index()
-    {
-        $products = Product::with(['category', 'suppliers', 'user']) // تحميل المالك أيضًا
-                           ->withCount('suppliers')
-                           ->latest()
-                           ->paginate(10);
+  public function index()
+{
+    $products = Product::with(['category', 'suppliers', 'user'])
+        ->latest()
+        ->paginate(10);
 
-        return view('products.index', compact('products'));
-    }
+    return view('products.index', compact('products'));
+}
+
+
+
 
     /**
      * عرض صفحة إنشاء منتج جديد
