@@ -60,12 +60,12 @@
                 </div>
             </form>
 
-            
             <div class="overflow-x-auto bg-white shadow rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-800 text-white">
                         <tr>
                             <th class="px-4 py-2 text-left">#</th>
+                            <th class="px-4 py-2 text-left">الصورة</th>
                             <th class="px-4 py-2 text-left">الاسم</th>
                             <th class="px-4 py-2 text-left">السعر</th>
                             <th class="px-4 py-2 text-left">التصنيف</th>
@@ -78,6 +78,11 @@
                         @forelse($products as $product)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-2">{{ $product->id }}</td>
+                                <td class="px-4 py-2">
+                                    <img src="{{ $product->image_path ? asset('storage/' . $product->image_path) : asset('images/placeholder.png') }}"
+                                         alt="{{ $product->name }}"
+                                         class="w-16 h-16 object-cover rounded">
+                                </td>
                                 <td class="px-4 py-2">{{ $product->name }}</td>
                                 <td class="px-4 py-2">{{ $product->price }}</td>
                                 <td class="px-4 py-2">{{ $product->category?->name ?? 'بدون تصنيف' }}</td>
@@ -108,14 +113,13 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-4 text-center text-gray-500">لا توجد منتجات مطابقة للمعايير</td>
+                                <td colspan="8" class="px-4 py-4 text-center text-gray-500">لا توجد منتجات مطابقة للمعايير</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
-            
             <div class="mt-4">
                 {{ $products->withQueryString()->links() }}
             </div>

@@ -7,6 +7,8 @@ use App\Models\Category;
 use App\Models\Supplier;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use Illuminate\Support\Facades\Storage;
+
 
 
 
@@ -63,32 +65,37 @@ $products->appends(request()->all());
     }
 
     
-    public function store(StoreProductRequest $request)
-    {
-        $data = $request->validated();
+   public function store(StoreProductRequest $request)
+{
+    $data = $request->validated();
 
-        $product = Product::create([
-            'name'        => $data['name'],
-            'price'       => $data['price'],
-            'category_id' => $data['category_id'],
-            'user_id'     => auth()->id(), // ربط المنتج بالمستخدم الحالي
-        ]);
-
-        $pivot = [];
-        foreach ($request->input('suppliers', []) as $supplierId => $payload) {
-            if (!empty($payload['selected'])) {
-                $pivot[$supplierId] = [
-                    'cost_price'     => $payload['cost_price'],
-                    'lead_time_days' => $payload['lead_time_days'],
-                ];
-            }
-        }
-
-        $product->suppliers()->sync($pivot);
-
-        return redirect()->route('products.index')
-                         ->with('success', 'تم إنشاء المنتج وربطه بالمستخدم والموردين بنجاح.');
+    if ($request->hasFile('image')) {
+        $data['image_path'] = $request->file('image')->store('products', 'public');
     }
+
+    $product = Product::create([
+        'name'        => $data['name'],
+        'price'       => $data['price'],
+        'category_id' => $data['category_id'],
+        'user_id'     => auth()->id(),
+        'image_path'  => $data['image_path'] ?? null,
+    ]);
+
+    $pivot = [];
+    foreach ($request->input('suppliers', []) as $supplierId => $payload) {
+        if (!empty($payload['selected'])) {
+            $pivot[$supplierId] = [
+                'cost_price'     => $payload['cost_price'],
+                'lead_time_days' => $payload['lead_time_days'],
+            ];
+        }
+    }
+    $product->suppliers()->sync($pivot);
+
+    return redirect()->route('products.index')
+                     ->with('success', 'تم إنشاء المنتج بنجاح.');
+}
+
 
     
     public function show(Product $product)
@@ -110,36 +117,44 @@ $products->appends(request()->all());
 
     
     public function update(UpdateProductRequest $request, Product $product)
-    {
-        $this->authorize('update', $product); 
+{
+    $data = $request->validated();
 
-        $data = $request->validated();
+    if ($request->hasFile('image')) {
+        if ($product->image_path && Storage::disk('public')->exists($product->image_path)) {
+    Storage::disk('public')->delete($product->image_path);
+}
 
-        $product->update([
-            'name'        => $data['name'],
-            'price'       => $data['price'],
-            'category_id' => $data['category_id'],
-        ]);
-
-        $pivot = [];
-        foreach ($request->input('suppliers', []) as $supplierId => $payload) {
-            if (!empty($payload['selected'])) {
-                $pivot[$supplierId] = [
-                    'cost_price'     => $payload['cost_price'],
-                    'lead_time_days' => $payload['lead_time_days'],
-                ];
-            }
         }
 
-        $product->suppliers()->sync($pivot);
+        $data['image_path'] = $request->file('image')->store('products', 'public');
+    
 
-        return redirect()->route('products.index')
-                         ->with('success', 'تم تحديث المنتج والموردين بنجاح.');
+    $product->update([
+        'name'        => $data['name'],
+        'price'       => $data['price'],
+        'category_id' => $data['category_id'],
+        'image_path'  => $data['image_path'] ?? $product->image_path,
+    ]);
+
+    $pivot = [];
+    foreach ($request->input('suppliers', []) as $supplierId => $payload) {
+        if (!empty($payload['selected'])) {
+            $pivot[$supplierId] = [
+                'cost_price'     => $payload['cost_price'],
+                'lead_time_days' => $payload['lead_time_days'],
+            ];
+        }
     }
+    $product->suppliers()->sync($pivot);
+
+    return redirect()->route('products.index')->with('success', 'تم تحديث المنتج بنجاح.');
+}
+
 
     public function destroy(Product $product)
     {
-        $this->authorize('delete', $product); // التحقق من الصلاحيات
+        $this->authorize('delete', $product); 
 
         $product->delete();
 

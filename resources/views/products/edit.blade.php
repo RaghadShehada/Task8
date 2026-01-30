@@ -6,69 +6,81 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+        <div class="container max-w-3xl">
 
-            {{-- Flash Messages --}}
-            @if(session('success'))
-                <div class="mb-4 p-4 bg-green-100 text-green-800 rounded">
-                    {{ session('success') }}
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="mb-4 p-4 bg-red-100 text-red-800 rounded">
-                    {{ session('error') }}
-                </div>
-            @endif
+            <div class="card shadow mb-6">
+                <div class="card-body">
 
-            <div class="bg-white shadow rounded-lg p-6">
-                <form action="{{ route('products.update', $product->id) }}" method="POST">
-                    @csrf
-                    @method('PUT')
+                    <form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        @method('PUT')
 
-                    <div class="mb-4">
-                        <label class="block mb-1 font-medium">اسم المنتج</label>
-                        <input type="text" name="name" class="w-full border-gray-300 rounded px-3 py-2" value="{{ old('name', $product->name) }}">
-                        @error('name')<small class="text-red-500">{{ $message }}</small>@enderror
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">اسم المنتج</label>
+                            <input type="text" name="name" class="form-control" value="{{ old('name', $product->name) }}">
+                            @error('name')<div class="text-danger">{{ $message }}</div>@enderror
+                        </div>
 
-                    <div class="mb-4">
-                        <label class="block mb-1 font-medium">السعر</label>
-                        <input type="number" name="price" step="0.01" class="w-full border-gray-300 rounded px-3 py-2" value="{{ old('price', $product->price) }}">
-                        @error('price')<small class="text-red-500">{{ $message }}</small>@enderror
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">السعر</label>
+                            <input type="number" step="0.01" name="price" class="form-control" value="{{ old('price', $product->price) }}">
+                            @error('price')<div class="text-danger">{{ $message }}</div>@enderror
+                        </div>
 
-                    <div class="mb-4">
-                        <label class="block mb-1 font-medium">التصنيف</label>
-                        <select name="category_id" class="w-full border-gray-300 rounded px-3 py-2">
-                            <option value="">-- اختر التصنيف --</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id', $product->category_id)==$category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('category_id')<small class="text-red-500">{{ $message }}</small>@enderror
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">التصنيف</label>
+                            <select name="category_id" class="form-select">
+                                <option value="">-- اختر التصنيف --</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" {{ $product->category_id == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('category_id')<div class="text-danger">{{ $message }}</div>@enderror
+                        </div>
 
-                    <div class="mb-4">
-                        <label class="block mb-1 font-medium">الموردون</label>
-                        <select name="suppliers[]" multiple class="w-full border-gray-300 rounded px-3 py-2">
+                        <div class="mb-3">
+                            <label class="form-label">الموردون</label>
                             @foreach($suppliers as $supplier)
-                                <option value="{{ $supplier->id }}" {{ in_array($supplier->id, old('suppliers', $product->suppliers->pluck('id')->toArray())) ? 'selected' : '' }}>
-                                    {{ $supplier->name }}
-                                </option>
+                                @php $pivot = $product->suppliers->find($supplier->id)?->pivot; @endphp
+                                <div class="border p-2 rounded mb-2">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="suppliers[{{ $supplier->id }}][selected]" {{ $pivot ? 'checked' : '' }}>
+                                        <label class="form-check-label">{{ $supplier->name }}</label>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col">
+                                            <input type="number" name="suppliers[{{ $supplier->id }}][cost_price]" placeholder="سعر التكلفة" value="{{ $pivot->cost_price ?? '' }}" class="form-control">
+                                        </div>
+                                        <div class="col">
+                                            <input type="number" name="suppliers[{{ $supplier->id }}][lead_time_days]" placeholder="مدة التوريد (يوم)" value="{{ $pivot->lead_time_days ?? '' }}" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
                             @endforeach
-                        </select>
-                        @error('suppliers')<small class="text-red-500">{{ $message }}</small>@enderror
-                    </div>
+                        </div>
 
-                    <div class="flex space-x-2">
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">تحديث</button>
-                        <a href="{{ route('products.index') }}" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">إلغاء</a>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">صورة المنتج</label>
+                            <input type="file" name="image" class="form-control">
+                            @if($product->image_path)
+                                <img src="{{ asset('storage/' . $product->image_path) }}" class="mt-2 rounded" style="width:120px; height:120px; object-fit:cover;">
+                            @endif
+                            @error('image')<div class="text-danger">{{ $message }}</div>@enderror
+                        </div>
 
-                </form>
+                        <div class="d-flex justify-content-center gap-2 mt-4">
+                            <button type="submit" class="btn btn-success"> حفظ </button>
+                            <a href="{{ route('products.index') }}" class="btn btn-danger">إلغاء</a>
+                        </div>
+
+                    </form>
+
+                </div>
             </div>
+
         </div>
     </div>
 </x-app-layout>
+

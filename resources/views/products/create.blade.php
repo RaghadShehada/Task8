@@ -20,7 +20,7 @@
         </div>
     @endif
 
-    <form action="{{ route('products.store') }}" method="POST">
+    <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
         <div class="mb-3">
@@ -46,6 +46,12 @@
                 @endforeach
             </select>
             @error('category_id') <div class="text-danger">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="image" class="form-label">صورة المنتج</label>
+            <input type="file" name="image" id="image" accept="image/*" class="form-control">
+            @error('image') <div class="text-danger">{{ $message }}</div> @enderror
         </div>
 
         <hr>
@@ -86,4 +92,3 @@
 </div>
 </body>
 </html>
-

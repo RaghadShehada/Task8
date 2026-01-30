@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html> 
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8">
@@ -17,7 +17,15 @@
                 <i class="fa fa-arrow-left"></i> رجوع للقائمة
             </a>
         </div>
+
         <div class="card-body">
+
+            <div class="mb-4 text-center">
+                <img src="{{ $product->image_path ? asset('storage/' . $product->image_path) : asset('images/placeholder.png') }}"
+                     alt="{{ $product->name }}"
+                     class="w-64 h-64 object-cover rounded mx-auto">
+            </div>
+
             <dl class="row">
                 <dt class="col-sm-3">الاسم:</dt>
                 <dd class="col-sm-9">{{ $product->name }}</dd>
@@ -67,8 +75,10 @@
                     </form>
                 @endcan
             </div>
+
         </div>
     </div>
 </div>
+
 </body>
 </html>
