@@ -8,7 +8,6 @@
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-            {{-- Flash Messages --}}
             @if(session('success'))
                 <div class="mb-4 p-4 bg-green-100 text-green-800 rounded">
                     {{ session('success') }}
@@ -20,7 +19,6 @@
                 </div>
             @endif
 
-            {{-- Add Product Button --}}
             @auth
                 <div class="mb-4">
                     <a href="{{ route('products.create') }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
@@ -29,7 +27,40 @@
                 </div>
             @endauth
 
-            {{-- Products Table --}}
+            <form method="GET" action="{{ route('products.index') }}" class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-2">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="بحث باسم المنتج..." class="p-2 border rounded col-span-1 md:col-span-2">
+
+                <select name="category_id" class="p-2 border rounded col-span-1">
+                    <option value="">كل التصنيفات</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <select name="supplier_id" class="p-2 border rounded col-span-1">
+                    <option value="">كل الموردين</option>
+                    @foreach($suppliers as $supplier)
+                        <option value="{{ $supplier->id }}" {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                            {{ $supplier->name }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <select name="sort_field" class="p-2 border rounded col-span-1">
+                    <option value="created_at" {{ request('sort_field') == 'created_at' ? 'selected' : '' }}>تاريخ الإنشاء</option>
+                    <option value="price" {{ request('sort_field') == 'price' ? 'selected' : '' }}>السعر</option>
+                    <option value="name" {{ request('sort_field') == 'name' ? 'selected' : '' }}>الاسم</option>
+                </select>
+
+                <div class="col-span-1 md:col-span-1 flex gap-2">
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex-1">تطبيق</button>
+                    <a href="{{ route('products.index') }}" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 flex-1">إعادة ضبط</a>
+                </div>
+            </form>
+
+            
             <div class="overflow-x-auto bg-white shadow rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-800 text-white">
@@ -77,16 +108,16 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-4 text-center text-gray-500">لا توجد منتجات حالياً</td>
+                                <td colspan="7" class="px-4 py-4 text-center text-gray-500">لا توجد منتجات مطابقة للمعايير</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
-            {{-- Pagination --}}
+            
             <div class="mt-4">
-                {{ $products->links() }}
+                {{ $products->withQueryString()->links() }}
             </div>
 
         </div>
